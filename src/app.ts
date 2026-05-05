@@ -9,8 +9,21 @@ import { notFound } from "./middlewares/notFound.js";
 const app: Application = express();
 
 // ── Middleware ─────────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    process.env.FRONTEND_URL,
+].filter(Boolean) as string[];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+        // Allow server-to-server requests (no origin) and all listed origins
+        if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS: origin ${origin} not allowed`));
+        }
+    },
     credentials: true,
 }));
 app.use(express.json());
